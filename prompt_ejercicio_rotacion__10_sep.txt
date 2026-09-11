@@ -1,0 +1,425 @@
+¿por qué motivo una llamada a un servidor NGINX que lo único que hace es inyectar un encabezado de tipo x-api-key dejaría al cliente "colgado" o "esperando indefinidamente"?
+
+
+
+¿hace falta añadir alguna instrucción especial a mi endpoint de backend o al nginx como tal?
+
+
+
+abajo está mi código de NGINX y sus correspondiente archivos en docker
+
+```
+
+# configuración de NGINX
+
+server {
+
+    listen 8090;
+
+    server_name _;
+
+
+
+    root /usr/share/nginx/html;
+
+    index index.html;
+
+
+
+    # Static frontend — no API key anywhere in these files.
+
+    location / {
+
+        try_files $uri $uri/ =404;
+
+    }
+
+
+
+    # The browser sends no credentials; nginx attaches the secret server-side.
+
+    location /api/customers/ {
+
+        # Preserve /api/ when forwarding to the API.
+
+        proxy_pass ${API_UPSTREAM};
+
+
+
+        proxy_set_header X-API-Key "${API_KEY}";
+
+        proxy_set_header Host $host;
+
+        proxy_set_header X-Real-IP $remote_addr;
+
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+    }
+
+}
+
+
+
+# códigos de Dockerfile y del entrypoint
+
+FROM nginx:1.27-alpine
+
+
+
+# gettext provides envsubst, used to inject API_KEY into the nginx config
+
+# at container start without baking it into the image.
+
+RUN apk add --no-cache gettext
+
+
+
+COPY index.html app.js /usr/share/nginx/html/
+
+COPY nginx.conf.template /etc/nginx/templates/nginx.conf.template
+
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+
+
+
+RUN chmod +x /docker-entrypoint.sh
+
+
+
+EXPOSE 8090
+
+ENTRYPOINT ["/docker-entrypoint.sh"]
+
+
+
+#!/bin/sh
+
+set -eu
+
+
+
+: "${API_KEY:?API_KEY environment variable must be set (e.g. via docker-compose --env-file .env)}"
+
+: "${API_UPSTREAM:?API_UPSTREAM environment variable must be set}"
+
+
+
+# Only substitute the variables we control so nginx's own variables remain intact.
+
+envsubst '${API_KEY} ${API_UPSTREAM}' \
+
+  < /etc/nginx/templates/nginx.conf.template \
+
+  > /etc/nginx/conf.d/default.conf
+
+
+
+exec nginx -g 'daemon off;'
+
+```
+
+
+
+abajo está mi código de servidor en python:
+
+```
+
+# run.py en la raíz del directorio
+
+from fastapi import Request
+
+from fastapi.responses import JSONResponse
+
+from app import create_app
+
+from app.config import API_KEY
+
+
+
+app = create_app()
+
+
+
+@app.middleware("http")
+
+async def log_request(request: Request, call_next):
+
+    x_api_key = request.headers.get("x-api-key")
+
+
+
+    if not x_api_key or x_api_key != API_KEY:
+
+        return JSONResponse(
+
+            status_code=401,
+
+            content={"detail": "Invalid or missing API Key"}
+
+        )
+
+
+
+    headers = "; ".join(
+
+        f"{key}={value}"
+
+        for key, value in request.headers.items()
+
+    )
+
+
+
+    body = await request.body()
+
+
+
+    print(f"HEADERS: {headers}")
+
+    print(f"BODY: {body.decode('utf-8', errors='replace')}")
+
+
+
+    response = await call_next(request)
+
+
+
+    return response
+
+
+
+# debajo está el código del archivo llamado __init__.py dentro de la carpeta "/app" posicionada en la raíz de mi proyecto (la carpeta está en la raíz y el archivo __init__.py adentro de esa carpeta), entiendo que éste archivo sería equivalente a un main.py, pero que delega el consumo de create_app a otro componente (la verdad sé muy poco de python).
+
+
+
+from fastapi import FastAPI
+
+
+
+from app.database import initialize_database
+
+from app.routes.customer_routes import customer_routes
+
+
+
+from app.config import API_KEY, DATABASE_PATH, KEY_DIR, PUBLIC_KEY_PATH, PRIVATE_KEY_PATH
+
+
+
+
+
+def create_app() -> FastAPI:
+
+    app = FastAPI(
+
+        title="Secrets Rotation Security Lab",
+
+        description="Educational Secrets Rotation Security Lab",
+
+        version="1.0.0",
+
+    )
+
+
+
+    print(f"The variables are ready {API_KEY}, {DATABASE_PATH}, {KEY_DIR}, {PUBLIC_KEY_PATH}, {PRIVATE_KEY_PATH}")
+
+    print(
+
+        f"The variables are ready "
+
+        f"{API_KEY}, {DATABASE_PATH}, {KEY_DIR}, "
+
+        f"{PUBLIC_KEY_PATH}, {PRIVATE_KEY_PATH}",
+
+        flush=True
+
+    )
+
+    initialize_database()
+
+
+
+    app.include_router(customer_routes)
+
+
+
+    return app
+
+
+
+# debajo está la ruta que hace match exacto con NGINX
+
+from fastapi import APIRouter
+
+
+
+from app.controllers.customer_controller import CustomerController
+
+from app.schemas.customer import CustomerCreate, CustomerResponse
+
+
+
+customer_routes = APIRouter(
+
+    prefix="/api/customers",
+
+    tags=["Customers"],
+
+)
+
+
+
+controller = CustomerController()
+
+
+
+@customer_routes.post(
+
+    "",
+
+    response_model=CustomerResponse,
+
+    status_code=201,
+
+)
+
+def create_customer(data: CustomerCreate):
+
+    return controller.create(data)
+
+
+
+
+
+@customer_routes.get(
+
+    "/{customer_id}",
+
+    response_model=CustomerResponse,
+
+)
+
+def get_customer(customer_id: int):
+
+    return controller.get(customer_id)
+
+
+
+```
+
+mencionó que coincide exactamente con NGINX porque hasta ahora sólo he probado la ruta con el método POST, la de get customer_id no la he probado.
+
+
+
+lo que ocurre es que mi frontend, que se encuentra dentro del mismo host de NGINX, no logra recibir respuesta del servidor.
+
+el docker compose que levanta todo es el siguiente:
+
+```
+
+services:
+
+  rotator_api:
+
+    build:
+
+      context: ./encryption-service-sample/
+
+      dockerfile: Dockerfile
+
+    container_name: rotator_api_container
+
+    environment:
+
+      - API_KEY=${API_KEY}
+
+      - KEY_DIR=${KEY_DIR}
+
+      - DATABASE_PATH=${DATABASE_PATH}
+
+      - PRIVATE_KEY_LOCATION=${PRIVATE_KEY_LOCATION}
+
+      - PUBLIC_KEY_LOCATION=${PUBLIC_KEY_LOCATION}
+
+    ports:
+
+      - "8000:8000"
+
+    volumes:
+
+      - crypto_keys:/app/keys
+
+
+
+  rotator_nginx_frontend:
+
+    build:
+
+      context: ./nginx-frontend/
+
+      dockerfile: Dockerfile
+
+    container_name: rotator_nginx_frontend_container
+
+    environment:
+
+      - API_KEY=${API_KEY}
+
+      - API_UPSTREAM=${API_UPSTREAM:-http://host.docker.internal:8000}
+
+    ports:
+
+      - "8090:8090"
+
+
+
+volumes:
+
+  crypto_keys:
+
+
+
+```
+
+
+
+en mi panel de desarrolladores, en la sección de red veo que la solicitud se efectúa, pero como lo dije, se queda colgado esperando respuesta hasta alcanzar el timeout.
+
+
+
+en mi panel de red se ven 3 solicitudes:
+
+```
+
+Request URL : http://localhost:8090/api/customers 
+
+Request Method : POST 
+
+Status Code: 301 Moved Permanently 
+
+Remote Address: [::1]:8090 
+
+Referrer Policy: strict-origin-when-cross-origin
+
+
+
+Request URL : http://localhost:8090/api/customers/
+
+Request Method : GET 
+
+Status Code : 307 Temporary Redirect 
+
+Remote Address : [::1]:8090 
+
+Referrer Policy : strict-origin-when-cross-origin
+
+```
+
+de hecho, ya logré identificar una causa, en los logs de la api de fastAPI se observa lo siguiente:
+```
+rotator_api_container             | INFO:     172.30.0.1:54168 - "GET /api/customers/ HTTP/1.0" 307 Temporary Redirect
+```
+llega un método GET ¿a qué se debe si yo desde mi frontend envié un POST?

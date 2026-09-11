@@ -1,0 +1,30 @@
+services:
+  rotator_api:
+    build:
+      context: ./encryption-service-sample/
+      dockerfile: Dockerfile
+    container_name: rotator_api_container
+    environment:
+      - API_KEY=${API_KEY}
+      - KEY_DIR=${KEY_DIR}
+      - DATABASE_PATH=${DATABASE_PATH}
+      - PRIVATE_KEY_LOCATION=${PRIVATE_KEY_LOCATION}
+      - PUBLIC_KEY_LOCATION=${PUBLIC_KEY_LOCATION}
+    ports:
+      - "8000:8000"
+    volumes:
+      - crypto_keys:/app/keys
+
+  rotator_nginx_frontend:
+    build:
+      context: ./nginx-frontend/
+      dockerfile: Dockerfile
+    container_name: rotator_nginx_frontend_container
+    environment:
+      - API_KEY=${API_KEY}
+      - API_UPSTREAM=${API_UPSTREAM:-http://host.docker.internal:8000}
+    ports:
+      - "8090:8090"
+
+volumes:
+  crypto_keys:

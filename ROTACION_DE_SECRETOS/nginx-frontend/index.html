@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>API Key Demo</title>
+  <style>
+    .body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+    .input, .button {
+      padding: 1rem 2.5rem 1rem 1rem;
+    }
+  </style>
+</head>
+<body class="body">
+  <main>
+    <h1>X-API-Key request demo</h1>
+    <p class="sub">Sends a request through nginx without exposing the X-API-Key header.</p>
+
+    <div class="panel">
+      <button id="createCustomerButton" class="button">
+        Perform HTTP POST /api/customers
+      </button>
+    </div>
+
+    <br>
+    <br>
+
+    <div class="panel">
+
+      <label>Select the customer you want to retrieve based on her/his id</label>
+      <br>
+      <input type="number" id="setCustomerId_Input" class="input">
+      <button type="number" id="setCustomerId_Button" class="button">
+        Set the value for customer id
+      </button>
+
+      <br>
+      <button id="getCustomerButton" class="button">
+        Perform HTTP GET /api/customers/{id}
+      </button>
+    </div>
+
+    <div class="panel">
+      <div id="status" class="status">No request sent yet.</div>
+      <pre id="output">—</pre>
+    </div>
+
+    <p class="note">
+      ✅ The API key is no longer in this page or in <code>app.js</code>.
+      The browser calls <code>/api/secure-data</code> on the same origin;
+      nginx proxies that to the configured API and attaches the real
+      <code>X-API-Key</code> header itself, from a value it reads out of its
+      own container environment. The key never ships to the browser, so
+      "View Source" or a curl+grep against these files finds nothing.
+    </p>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

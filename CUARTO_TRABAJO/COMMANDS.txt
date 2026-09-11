@@ -1,0 +1,18 @@
+DOCKER COMMANDS
+
+ORIGINAL
+docker run -it --name network-lab --cap-add=NET_ADMIN --cap-add=NET_RAW network-wireshark-lab
+
+IPv6 NETWORKING ENABLING
+docker network rm ipv6-lab                                                           # remove if already exists
+docker network create --ipv6 --subnet 2001:db8:100::/64  ipv6-lab
+
+
+HOST 1
+
+docker run -it --name vhost1 --network ipv6-lab --cap-add=NET_ADMIN --cap-add=NET_RAW network-wireshark-lab
+
+
+HOST 2
+
+docker run -it --name vhost2 --network ipv6-lab network-wireshark-lab
