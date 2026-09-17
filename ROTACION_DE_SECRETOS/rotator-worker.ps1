@@ -12,7 +12,7 @@ while ($true) {
     Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Rotating secret..."
 
     # 1. Generate and write the new API_KEY
-    python $RotatorScript
+    python -u $RotatorScript
 
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Secret rotation failed."
@@ -23,18 +23,13 @@ while ($true) {
 
     # 2. Recreate ONLY the NGINX frontend container.
     #
-    # --no-deps:
-    #   Do not restart rotator_api.
-    #
     # --force-recreate:
     #   Force Docker Compose to create a new container
     #   so the new API_KEY is injected into its environment.
     docker compose `
         -f $ComposeFile `
         up -d `
-        --no-deps `
-        --force-recreate `
-        rotator_nginx_frontend
+        --force-recreate
 
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Docker Compose restart failed."

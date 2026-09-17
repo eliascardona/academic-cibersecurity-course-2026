@@ -1,8 +1,6 @@
 from fastapi import FastAPI
 
-from app.database import initialize_database
-from app.routes.customer_routes import customer_routes
-
+from app.routes.ldap_routes import ldap_routes
 
 def create_app() -> FastAPI:
     app = FastAPI(
@@ -11,8 +9,6 @@ def create_app() -> FastAPI:
         version="1.0.0",
     )
 
-    initialize_database()
-
-    app.include_router(customer_routes)
+    app.include_router(ldap_routes)
 
     return app
