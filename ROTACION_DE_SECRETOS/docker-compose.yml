@@ -1,9 +1,9 @@
 services:
-  rotator_api:
+  rotator_project_encryption_api:
     build:
       context: ./encryption-service-sample/
       dockerfile: Dockerfile
-    container_name: rotator_api_container
+    container_name: rotator-project-encryption-api
     environment:
       - API_KEY=${API_KEY}
       - KEY_DIR=${KEY_DIR}
@@ -15,20 +15,20 @@ services:
     volumes:
       - crypto_keys:/app/keys
 
-  rotator_nginx_frontend:
+  rotator_project_nginx_frontend:
     build:
       context: ./nginx-frontend/
       dockerfile: Dockerfile
-    container_name: rotator_nginx_frontend_container
+    container_name: rotator-project-nginx-frontend
     environment:
       - API_KEY=${API_KEY}
       - API_UPSTREAM=${API_UPSTREAM:-http://host.docker.internal:8000}
     ports:
       - "8090:8090"
 
-  openldap:
+  rotator_project_openldap:
     image: osixia/openldap:1.5.0
-    container_name: openldap
+    container_name: rotator-project-openldap
     hostname: ldap.example.com
     environment:
       LDAP_ORGANISATION: "Example Corp"
@@ -41,11 +41,11 @@ services:
       - ldap_data_integrated:/var/lib/ldap
       - ldap_config_integrated:/etc/ldap/slapd.d
     networks:
-      - ldap-network_integrated
+      - ldap_network_integrated
 
-  phpldapadmin:
+  rotator_project_phpldapadmin:
     image: osixia/phpldapadmin:latest
-    container_name: phpldapadmin
+    container_name: rotator-project-phpldapadmin
     hostname: phpldapadmin
     environment:
       PHPLDAPADMIN_LDAP_HOSTS: "openldap"
@@ -55,15 +55,15 @@ services:
     ports:
       - "8080:80"
     depends_on:
-      - openldap
+      - rotator_project_openldap
     networks:
-      - ldap-network
+      - ldap_network_integrated
 
-  api:
+  rotator_project_ldap_api:
     build:
       context: ./LDAP/fastapi/
       dockerfile: Dockerfile
-    container_name: ldap-api
+    container_name: rotator-project-ldap-api
     ports:
       - "8000:8000"
     environment:
@@ -72,9 +72,9 @@ services:
       LDAP_PORT: "389"
       LDAP_BASE_DN: "dc=example,dc=com"
     depends_on:
-      - openldap
+      - rotator_project_openldap
     networks:
-      - ldap-network
+      - ldap_network_integrated
 
 volumes:
   crypto_keys:
@@ -82,4 +82,4 @@ volumes:
   ldap_config_integrated:
 
 networks:
-  ldap-network_integrated:
+  ldap_network_integrated:
