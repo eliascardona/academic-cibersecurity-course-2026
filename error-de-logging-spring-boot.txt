@@ -1,0 +1,49 @@
+```
+@RestController
+@RequestMapping("/api")
+@Slf4j
+public class ApiKeyVerifierController {
+
+    private String localApiKey = "F1qHISGk6cwnrRea1dAaSdhevVnVTFhgLHlmaohvibN6SZ";
+
+    @GetMapping("/data")
+    public ResponseEntity<?> getApiData(
+        @RequestHeader(value = "x-api-key", required = false) String xApiKey
+    ) {
+        try {
+            if (xApiKey == null || xApiKey.trim().isEmpty() || xApiKey != localApiKey) {
+
+                log.info("Received API key", xApiKey);
+                log.info(" ---------  vs.  ---------");
+                log.info("Local API key", localApiKey);
+
+                GenericResponseDto.Unauthorized response = GenericResponseDto.Unauthorized.builder()
+                        .status("unauthorized")
+                        .build();
+
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            }
+
+            GenericResponseDto.GetApiData response = GenericResponseDto.GetApiData.builder()
+                    .message("Protected Data")
+                    .course("Security Exercise")
+                    .status("success")
+                    .build();
+
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+}
+```
+
+mi app de spring boot tiene un filtro por cada request, similar a un middleware de debugging, lo que realiza es generar un log por todos los encabezados, por el body de la solicitud, así como request method y el URI
+
+```
+2026-09-29T21:17:45.905Z  INFO 1 --- [x_api_key_eliascardona] [nio-8082-exec-1] c.e.x.core.springbootconfig.Debugging    : Body:
+2026-09-29T21:17:48.825Z  INFO 1 --- [x_api_key_eliascardona] [nio-8082-exec-3] c.e.x.core.springbootconfig.Debugging    : Request: GET /api/data
+2026-09-29T21:17:48.826Z  INFO 1 --- [x_api_key_eliascardona] [nio-8082-exec-3] c.e.x.core.spring
+```
+
+¿por qué motivo no aparece el api key en los logs?

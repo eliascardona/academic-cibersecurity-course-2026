@@ -4,7 +4,10 @@ FROM nginx:1.27-alpine
 # at container start without baking it into the image.
 RUN apk add --no-cache gettext
 
-COPY index.html app.js /usr/share/nginx/html/
+COPY index.html /usr/share/nginx/html/
+COPY js/ /usr/share/nginx/html/js/
+
+
 COPY nginx.conf.template /etc/nginx/templates/nginx.conf.template
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 

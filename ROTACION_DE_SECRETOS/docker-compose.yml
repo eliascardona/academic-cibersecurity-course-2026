@@ -1,34 +1,35 @@
 services:
-  rotator_project_encryption_api:
-    build:
-      context: ./encryption-service-sample/
-      dockerfile: Dockerfile
-    container_name: rotator-project-encryption-api
-    environment:
-      - API_KEY=${API_KEY}
-      - KEY_DIR=${KEY_DIR}
-      - DATABASE_PATH=${DATABASE_PATH}
-      - PRIVATE_KEY_LOCATION=${PRIVATE_KEY_LOCATION}
-      - PUBLIC_KEY_LOCATION=${PUBLIC_KEY_LOCATION}
-    ports:
-      - "8000:8000"
-    volumes:
-      - crypto_keys:/app/keys
-
-  rotator_project_nginx_frontend:
+  initial_ldap_nginx_frontend:
     build:
       context: ./nginx-frontend/
       dockerfile: Dockerfile
-    container_name: rotator-project-nginx-frontend
+    container_name: initial_ldap_nginx_frontend_container
     environment:
       - API_KEY=${API_KEY}
-      - API_UPSTREAM=${API_UPSTREAM:-http://host.docker.internal:8000}
+      - API_UPSTREAM=${API_UPSTREAM:-http://host.docker.internal:8083}
     ports:
       - "8090:8090"
 
-  rotator_project_openldap:
+  initial_ldap_api:
+    build:
+      context: ./LDAP/fastapi/
+      dockerfile: Dockerfile
+    container_name: initial_ldap_api
+    ports:
+      - "8083:8083"
+    environment:
+      API_KEY: ${API_KEY}
+      LDAP_HOST: openldap
+      LDAP_PORT: "389"
+      LDAP_BASE_DN: "dc=example,dc=com"
+    # depends_on:
+    #   - initial_openldap
+    # networks:
+    #   - initial_ldap_network
+
+      initial_openldap:
     image: osixia/openldap:1.5.0
-    container_name: rotator-project-openldap
+    container_name: initial_openldap_container
     hostname: ldap.example.com
     environment:
       LDAP_ORGANISATION: "Example Corp"
@@ -38,48 +39,29 @@ services:
       - "389:389"
       - "636:636"
     volumes:
-      - ldap_data_integrated:/var/lib/ldap
-      - ldap_config_integrated:/etc/ldap/slapd.d
+      - initial_ldap_data:/var/lib/ldap
+      - initial_ldap_config:/etc/ldap/slapd.d
     networks:
-      - ldap_network_integrated
+      - initial_ldap_network
 
-  rotator_project_phpldapadmin:
+  initial_phpldapadmin:
     image: osixia/phpldapadmin:latest
-    container_name: rotator-project-phpldapadmin
+    container_name: initial_phpldapadmin_container
     hostname: phpldapadmin
     environment:
       PHPLDAPADMIN_LDAP_HOSTS: "openldap"
-      # The image enables HTTPS by default. For this lab we intentionally
-      # disable it so Apache serves phpLDAPadmin correctly on port 80.
       PHPLDAPADMIN_HTTPS: "false"
     ports:
       - "8080:80"
     depends_on:
-      - rotator_project_openldap
+      - initial_openldap
     networks:
-      - ldap_network_integrated
+      - initial_ldap_network
 
-  rotator_project_ldap_api:
-    build:
-      context: ./LDAP/fastapi/
-      dockerfile: Dockerfile
-    container_name: rotator-project-ldap-api
-    ports:
-      - "8000:8000"
-    environment:
-      API_KEY: ${API_KEY}
-      LDAP_HOST: openldap
-      LDAP_PORT: "389"
-      LDAP_BASE_DN: "dc=example,dc=com"
-    depends_on:
-      - rotator_project_openldap
-    networks:
-      - ldap_network_integrated
 
 volumes:
-  crypto_keys:
-  ldap_data_integrated:
-  ldap_config_integrated:
+  initial_ldap_data:
+  initial_ldap_config:
 
 networks:
-  ldap_network_integrated:
+  initial_ldap_network:

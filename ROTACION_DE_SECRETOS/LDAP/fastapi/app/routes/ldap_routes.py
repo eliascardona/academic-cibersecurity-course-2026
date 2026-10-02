@@ -14,8 +14,8 @@ class LoginRequest(BaseModel):
 
 
 ldap_routes = APIRouter(
-    prefix="/api/customers",
-    tags=["Customers"],
+    prefix="/api/ldap",
+    tags=["LDAP login"],
 )
 
 @ldap_routes.get("/health")

@@ -1,0 +1,42 @@
+server:
+  port: ${BACKEND_PORT:8082}
+
+spring:
+  application:
+    name: books_sample
+
+  datasource:
+    # Overall Connection Properties
+    url: ${DATASOURCE_URL:jdbc:postgresql://localhost:5435/escuela}
+    username: ${DATASOURCE_USERNAME:eliascardona}
+    password: ${DATASOURCE_PASSWORD:elias123}
+    driver-class-name: ${DATASOURCE_DRIVER_CLASS_NAME:org.postgresql.Driver}
+
+    hikari:
+      # Connection Pool Configuration
+      pool-name: HikariPoolSpringBootChat
+      maximum-pool-size: 20
+
+  jpa:
+    # JPA Configuration
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    database: POSTGRESQL
+    generate-ddl: true
+    show-sql: true
+
+    # Hibernate Properties (Explicit & Production-Ready)
+    properties:
+      hibernate:
+        # Dialect & SQL
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: ${DATASOURCE_SCHEMA:public}
+
+        # SQL Formatting & Logging
+        format_sql: true
+        use_sql_comments: true
+        highlight_sql: true
+        show_sql: true
+
+        # JDBC & Batch Settings
+        jdbc:
+          time_zone: UTC

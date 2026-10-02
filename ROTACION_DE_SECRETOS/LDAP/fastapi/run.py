@@ -3,10 +3,18 @@ from fastapi.responses import JSONResponse
 from app import create_app
 from app.config import API_KEY
 
+PUBLIC_PATHS = {
+    "/api/ldap/health",
+}
+
 app = create_app()
 
 @app.middleware("http")
 async def log_request(request: Request, call_next):
+
+    if request.url.path in PUBLIC_PATHS:
+        return await call_next(request)
+
     x_api_key = request.headers.get("x-api-key")
 
     if not x_api_key or x_api_key != API_KEY:

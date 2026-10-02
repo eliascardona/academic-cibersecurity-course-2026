@@ -82,13 +82,13 @@ http://localhost:8000/health
 Copy the LDIF:
 
 ```bash
-docker cp ldap/users.ldif openldap:/tmp/users.ldif
+docker cp ldap/users.ldif initial_openldap_container:/tmp/users.ldif
 ```
 
 Import it:
 
 ```bash
-docker exec openldap ldapadd \
+docker exec initial_openldap_container ldapadd \
   -x \
   -H ldap://localhost \
   -D "cn=admin,dc=example,dc=com" \
@@ -109,7 +109,7 @@ cn=developers
 ## Test LDAP authentication directly
 
 ```bash
-docker exec openldap ldapwhoami \
+docker exec initial_openldap_container ldapwhoami \
   -x \
   -H ldap://localhost \
   -D "uid=alice,ou=users,dc=example,dc=com" \
@@ -143,7 +143,7 @@ Expected response:
 ## LDAP search
 
 ```bash
-docker exec openldap ldapsearch \
+docker exec initial_openldap_container ldapsearch \
   -x \
   -H ldap://localhost \
   -D "cn=admin,dc=example,dc=com" \
@@ -184,7 +184,7 @@ These credentials are intentionally simple for the classroom lab.
 Check logs:
 
 ```bash
-docker logs phpldapadmin --tail 100
+docker logs initial_phpldapadmin_container --tail 100
 ```
 
 Verify the HTTPS setting:
@@ -203,7 +203,7 @@ PHPLDAPADMIN_LDAP_HOSTS=openldap
 Verify port mapping:
 
 ```bash
-docker port phpldapadmin
+docker port initial_phpldapadmin_container
 ```
 
 Expected:
@@ -234,3 +234,4 @@ LDAP on port 389 is unencrypted and should not be used for production
 authentication across an untrusted network. The next exercise can configure
 LDAPS on port 636, certificate validation, and packet inspection with
 Wireshark.
+
