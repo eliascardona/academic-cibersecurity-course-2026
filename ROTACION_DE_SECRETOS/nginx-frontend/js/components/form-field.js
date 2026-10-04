@@ -15,7 +15,7 @@ export function LDAPLoginForm() {
         console.log(`[payload]`, payload);
         console.log(`[Request body]`, requestBody);
 
-        const apiPath = "/api/ldap-login"
+        const apiPath = "/api/ldap/login"
         const requestOptions = {
             method: 'POST',
             headers: {
@@ -56,8 +56,9 @@ export function LDAPLoginForm() {
 
     const submitButton = Button(
         'Login',
-        () => {
-            performLDAPLogin(payload)
+        async () => {
+            console.log('click sobre el botón');
+            await performLDAPLogin(payload)
         }
     );
 

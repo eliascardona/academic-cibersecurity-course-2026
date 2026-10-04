@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from ldap3 import Server, Connection, ALL
 
 LDAP_HOST = os.getenv("LDAP_HOST", "openldap")
-LDAP_PORT = int(os.getenv("LDAP_PORT", "389"))
+LDAP_PORT = int(os.getenv("LDAP_PORT", "636"))
 LDAP_BASE_DN = os.getenv("LDAP_BASE_DN", "dc=example,dc=com")
 
 class LoginRequest(BaseModel):

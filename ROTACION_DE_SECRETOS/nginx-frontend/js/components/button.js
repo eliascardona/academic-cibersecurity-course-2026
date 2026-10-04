@@ -5,6 +5,7 @@ export function Button(
     }
 ) {
     const button = document.createElement('button');
+    button.setAttribute('type', 'button');
     button.classList.add('py-2');
     button.classList.add('px-6');
     button.classList.add('my-4');
@@ -15,7 +16,7 @@ export function Button(
     button.classList.add('bg-grey-100');
     button.innerText = text;
 
-    button.addEventListener('click', onClick)
+    button.addEventListener('click', () => { onClick() })
 
     return button;
 }

@@ -14,7 +14,7 @@ services:
     build:
       context: ./LDAP/fastapi/
       dockerfile: Dockerfile
-    container_name: initial_ldap_api
+    container_name: initial_ldap_api_container
     ports:
       - "8083:8083"
     environment:
@@ -27,7 +27,7 @@ services:
     # networks:
     #   - initial_ldap_network
 
-      initial_openldap:
+  initial_openldap:
     image: osixia/openldap:1.5.0
     container_name: initial_openldap_container
     hostname: ldap.example.com

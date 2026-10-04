@@ -7,8 +7,8 @@ This follows the documented osixia Docker Compose configuration for exposing
 phpLDAPadmin over HTTP on port 8080.
 
 ## Architecture
-
-FastAPI :8000
+```
+FastAPI :8083
     |
     | LDAP :389
     v
@@ -18,6 +18,7 @@ phpLDAPadmin :8080
     |
     v
 OpenLDAP
+```
 
 ## Start
 
@@ -71,11 +72,11 @@ adminpassword
 
 Open:
 
-http://localhost:8000/docs
+http://localhost:8083/docs
 
 Health:
 
-http://localhost:8000/health
+http://localhost:8083/health
 
 ## Load sample LDAP users
 
@@ -125,9 +126,10 @@ dn:uid=alice,ou=users,dc=example,dc=com
 ## Test FastAPI authentication
 
 ```bash
-curl -X POST http://localhost:8000/login \
+curl -X POST http://localhost:8083/api/ldap/login \
+  -H "x-api-key: KEY_VALUE" \
   -H "Content-Type: application/json" \
-  -d '{"username":"alice","password":"alice123"}'
+  -d '{"username": "alice", "password": "alice123"}'
 ```
 
 Expected response:
@@ -190,7 +192,7 @@ docker logs initial_phpldapadmin_container --tail 100
 Verify the HTTPS setting:
 
 ```bash
-docker inspect phpldapadmin   --format '{{range .Config.Env}}{{println .}}{{end}}' | grep PHPLDAPADMIN
+docker inspect initial_phpldapadmin_container   --format '{{range .Config.Env}}{{println .}}{{end}}' | findstr PHPLDAPADMIN
 ```
 
 You should see:
