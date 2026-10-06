@@ -11,11 +11,11 @@ public class ApiKeyVerifierController {
         @RequestHeader(value = "x-api-key", required = false) String xApiKey
     ) {
         try {
-            if (xApiKey == null || xApiKey.trim().isEmpty() || xApiKey != localApiKey) {
+            if (xApiKey == null || xApiKey.trim().isEmpty() || !xApiKey.equals(localApiKey)) {
 
-                log.info("Received API key", xApiKey);
+                log.info("Received API key {}", xApiKey);
                 log.info(" ---------  vs.  ---------");
-                log.info("Local API key", localApiKey);
+                log.info("Local API key {}", localApiKey);
 
                 GenericResponseDto.Unauthorized response = GenericResponseDto.Unauthorized.builder()
                         .status("unauthorized")

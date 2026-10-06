@@ -3,13 +3,15 @@ import { Link } from "react-router";
 
 export function GoToBookCreationButton() {
     return (
-        <Link to={"/create-book"}>
-            <div className="px-4 py-2 border border-neutral-50 rounded-md">
-                <div className="flex justify-content-between">
-                    <div>Registrar libro</div>
-                    <Book className="size-6" />
-                </div>
+        <div className="px-4 py-6">
+            <div className="p-2 border border-neutral-600 rounded-md">
+                <Link to={"/create-book"}>
+                    <div className="flex justify-content-between">
+                        <div>Clic para registrar libro</div>
+                        <Book className="size-6" />
+                    </div>
+                </Link>
             </div>
-        </Link>
+        </div>
     );
 }

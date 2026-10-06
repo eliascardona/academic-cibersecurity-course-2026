@@ -1,0 +1,64 @@
+services:
+
+  listado_oauth_postgres:
+    image: postgres:17.5
+    container_name: listado_postgres_container
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - listado_oauth_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 4
+
+  listado_oauth_backend:
+    build:
+      context: ./listado-backend
+      dockerfile: Dockerfile
+    container_name: listado_backend_container
+    restart: unless-stopped
+    environment:
+      BACKEND_PORT: ${BACKEND_PORT}
+
+      DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      DATASOURCE_USERNAME: ${POSTGRES_USER}
+      DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      DATASOURCE_VERSION: ${DATASOURCE_VERSION}
+      DATASOURCE_SCHEMA: ${DATASOURCE_SCHEMA}
+      HIBERNATE_DDL_AUTO: ${HIBERNATE_DDL_AUTO}
+
+    ports:
+      - "${BACKEND_PORT}:${BACKEND_PORT}"
+
+    depends_on:
+      listado_oauth_postgres:
+        condition: service_healthy
+
+  listado_oauth_frontend:
+    build:
+      context: ./listado-frontend
+      dockerfile: Dockerfile
+    container_name: listado_frontend_container
+    restart: unless-stopped
+    environment:
+      SERVER_API_URL: ${SERVER_API_URL}
+      VITE_API_URL: ${VITE_API_URL}
+
+    ports:
+      - "3000:3000"
+
+    depends_on:
+      - listado_oauth_backend
+
+
+volumes:
+  listado_oauth_pgdata:

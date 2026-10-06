@@ -6,10 +6,10 @@ interface BooksProps {
 }
 
 export function BookList({ books }: BooksProps) {
-    if (books.length < 1) return <>no hay libros</>
+    if (books.length < 1) return <div className="h-32">no hay libros</div>
 
     return (
-        <>
+        <div>
             {books.map((book) => (
                 <div className="px-4 py-2 border border-neutral-50 rounded-md">
                     <div className="flex justify-content-between">
@@ -18,6 +18,6 @@ export function BookList({ books }: BooksProps) {
                     </div>
                 </div>
             ))}
-        </>
+        </div>
     );
 }

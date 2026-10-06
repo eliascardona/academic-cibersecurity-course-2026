@@ -1,4 +1,4 @@
-import { apiClient } from '../infrastructure/api/client';
+import { type ApiClient } from '../infrastructure/api/client';
 import type { ServerActionResult } from '../shared/types';
 import { createBook } from './api';
 import {
@@ -11,7 +11,8 @@ import {
 } from './response-types';
 
 export async function bookCreationActionHandler(
-  requestBody: BookCreationRequestBody
+  requestBody: BookCreationRequestBody,
+  apiClient: ApiClient
 ): Promise<ServerActionResult<ActionResponse>> {
   const intent = requestBody.intent;
 

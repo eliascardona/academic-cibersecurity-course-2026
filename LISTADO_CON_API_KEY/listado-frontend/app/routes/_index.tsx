@@ -34,7 +34,7 @@ export default function BookListingIndexRoute() {
 
   return (
     <div className='grid w-full'>
-      <div className='grid grid-rows-[20%_80%] w-3/4 h-3/4 place-self-center'>
+      <div className='grid w-3/4 place-self-center'>
         <GoToBookCreationButton />
         <BookList books={books} />
       </div>

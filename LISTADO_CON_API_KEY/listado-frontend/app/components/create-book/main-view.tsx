@@ -9,6 +9,8 @@ import { triggerBookCreation } from "~/lib/various/form-submission/chat/action-t
 import type { action } from "~/routes/create-book";
 import type { CreatedBookDto } from "~/lib/book/response-types";
 import { toast } from "sonner";
+import { FormProvider, useForm } from "react-hook-form";
+import { Card, CardContent, CardHeader } from "../ui/card";
 
 const createBookFields: FieldConfig[] = [
   {
@@ -26,8 +28,8 @@ const createBookFields: FieldConfig[] = [
 ];
 
 export function MainViewBookCreation() {
-  // const [username, setUsername] = useState<AvailableUsername | null>(null);
   const submit = useSubmit();
+  const form = useForm();
 
   const actionData = useActionData<typeof action>();
 
@@ -51,47 +53,35 @@ export function MainViewBookCreation() {
 
   return (
     <div className="space-y-8 pt-8">
-      <h1 className="text-3xl">Sección para registrar libros</h1>
+      <div className="text-center">
+        <h1 className="text-3xl">Sección para registrar libros</h1>
+      </div>
 
-      <h2 className="text-xl">Crea un libro nuevo</h2>
-      <span className="text-lg text-muted-foreground">
-        Introduce sus datos básicos
-      </span>
+      <div className="grid w-full">
+        <Card className="w-1/2 place-self-center">
+          <CardHeader>
+            <h2 className="text-xl">Crea un libro nuevo</h2>
+          </CardHeader>
 
-      <FormTrigger
-        formId="create-book"
-        containerClassName="border border-gray-100"
-        className="py-6 px-4"
-        fieldArray={createBookFields}
-        onSubmit={createBookWrapper}
-        disabled={false}
-      />
+          <CardContent>
+            <span className="text-lg text-muted-foreground">
+              Introduce sus datos básicos
+            </span>
 
-      {/* <div className="mx-auto grid w-1/2 grid-cols-2 gap-2">
-        <div
-          className={cn(
-            "cursor-pointer rounded-md border p-4 text-center",
-            username != null && username === "Fulanito"
-              ? "border-sky-100 bg-sky-50"
-              : "",
-          )}
-          onClick={() => setUsername("Fulanito")}
-        >
-          Fulanito
-        </div>
-
-        <div
-          className={cn(
-            "cursor-pointer rounded-md border p-4 text-center",
-            username != null && username === "Fulanita"
-              ? "border-sky-100 bg-sky-50"
-              : "",
-          )}
-          onClick={() => setUsername("Fulanita")}
-        >
-          Fulanita
-        </div>
-      </div> */}
+            <FormProvider {...form}>
+              <FormTrigger
+                formId="create-book"
+                containerClassName="border border-gray-100"
+                className="py-6 px-4"
+                fieldArray={createBookFields}
+                onSubmit={createBookWrapper}
+                disabled={false}
+              />
+            </FormProvider>
+          </CardContent>
+        </Card>
+      </div>
+      {/* Form's layout container */}
     </div>
   );
 }
